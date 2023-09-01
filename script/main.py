@@ -72,7 +72,7 @@ def main():
             result_df = filter_and_sum(df)
             expose_metrics_to_prometheus(result_df)
         
-        time.sleep(60)
+        time.sleep(3600)
 
 if __name__ == "__main__":
     main()
