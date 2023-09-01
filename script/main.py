@@ -14,9 +14,8 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 # Define Prometheus metrics
-gauge_usage_quantity = Gauge('usage_quantity', 'Usage Quantity', ['product_name'])
-gauge_blended_cost = Gauge('blended_cost', 'Blended Cost', ['product_name'])
-gauge_unblended_cost = Gauge('unblended_cost', 'UnBlended Cost', ['product_name'])
+gauge_blended_cost = Gauge('blended_cost', 'Blended Cost', ['product_name', 'resource_id'])
+gauge_unblended_cost = Gauge('unblended_cost', 'UnBlended Cost', ['product_name', 'resource_id'])
 
 
 # Set up boto3 S3 client
@@ -37,19 +36,19 @@ def download_latest_file_from_s3(bucket_name):
 
 def filter_and_sum(df):
     # Filter desired columns
-    desired_columns = ["ProductName", "UsageQuantity", "BlendedRate", "BlendedCost", "UnBlendedRate", "UnBlendedCost"]
+    desired_columns = ["ProductName", "ResourceId", "BlendedCost", "UnBlendedCost"]
     df = df[desired_columns]
     
-    # Group by 'ProductName' and sum the other columns
-    df_summed = df.groupby('ProductName').sum().reset_index()
+    # Group by 'ProductName' & 'ResourceId' and sum the other columns
+    df_summed = df.groupby(['ProductName', 'ResourceId']).sum().reset_index()
     return df_summed
 
 def expose_metrics_to_prometheus(df):
     for _, row in df.iterrows():
         product_name = row["ProductName"]
-        gauge_usage_quantity.labels(product_name=product_name).set(row["UsageQuantity"])
-        gauge_blended_cost.labels(product_name=product_name).set(row["BlendedCost"])
-        gauge_unblended_cost.labels(product_name=product_name).set(row["UnBlendedCost"])
+        resource_id = row["ResourceId"]
+        gauge_blended_cost.labels(product_name=product_name, resource_id=resource_id).set(row["BlendedCost"])
+        gauge_unblended_cost.labels(product_name=product_name, resource_id=resource_id).set(row["UnBlendedCost"])
 
 def main():
     # Start the HTTP server to expose metrics
@@ -72,6 +71,7 @@ def main():
             result_df = filter_and_sum(df)
             expose_metrics_to_prometheus(result_df)
         
+        print("Metrics updated!")
         time.sleep(3600)
 
 if __name__ == "__main__":

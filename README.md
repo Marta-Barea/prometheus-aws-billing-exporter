@@ -55,11 +55,10 @@ This will launch an HTTP server on port 8000 for Prometheus to scrape.
 
 ## 📊 Metrics
 
-- usage_quantity: Represents the usage amount of a specific AWS product.
 - blended_cost: Represents the combined cost for a specific AWS product.
 - unblended_cost: Represents the individual, uncombined cost for a specific AWS product.
 
-Each metric is labeled by its respective product name.
+Each metric is labeled by its respective product and resource names.
 
 ## 🔒 Note
 
